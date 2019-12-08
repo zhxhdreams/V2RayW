@@ -18,24 +18,19 @@ using System.Windows.Shapes;
 using Newtonsoft.Json;
 using V2RayW.Resources;
 
-namespace V2RayW
-{
+namespace V2RayW {
     /// <summary>
     /// Interaction logic for AdvancedWindow.xaml
     /// </summary>
-    public partial class AdvancedWindow : Window
-    {
-        public AdvancedWindow()
-        {
+    public partial class AdvancedWindow : Window {
+        public AdvancedWindow() {
             InitializeComponent();
             domainStrategyBox.Items.Clear();
-            foreach(string strategy in Utilities.DOMAIN_STRATEGY_LIST)
-            {
+            foreach (string strategy in Utilities.DOMAIN_STRATEGY_LIST) {
                 domainStrategyBox.Items.Add(strategy);
             }
             netWorkListBox.Items.Clear();
-            foreach(string network in Utilities.routingNetwork)
-            {
+            foreach (string network in Utilities.routingNetwork) {
                 netWorkListBox.Items.Add(network);
             }
         }
@@ -43,15 +38,13 @@ namespace V2RayW
         private ConfigWindow configWindow;
 
 
-        public void InitializeData()
-        {
+        public void InitializeData() {
             configWindow = this.Owner as ConfigWindow;
 
             outbounds = Utilities.DeepClone(configWindow.outbounds);
             subscriptionBox.Text = String.Join("\n", configWindow.subscriptions);
             routingRuleSets = Utilities.DeepClone(configWindow.routingRuleSets);
-            foreach(Dictionary<string, object> set in routingRuleSets)
-            {
+            foreach (Dictionary<string, object> set in routingRuleSets) {
                 set["rules"] = new List<object>(set["rules"] as IList<object>);
             }
 
@@ -81,46 +74,38 @@ namespace V2RayW
         #region customized configs
         private BackgroundWorker configScanner = new BackgroundWorker();
 
-        private void BrowseButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void BrowseButton_Click(object sender, RoutedEventArgs e) {
             Process.Start(AppDomain.CurrentDomain.BaseDirectory + @"config\");
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void RefreshButton_Click(object sender, RoutedEventArgs e) {
             cusConfigBox.Items.Clear();
             refreshButton.IsEnabled = false;
             configScanner.RunWorkerAsync();
         }
 
-        private void ConfigScanner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
+        private void ConfigScanner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) {
             Dispatcher.Invoke(() => {
                 refreshButton.IsEnabled = true;
             });
         }
 
-        private void ConfigScanner_DoWork(object sender, DoWorkEventArgs e)
-        {
+        private void ConfigScanner_DoWork(object sender, DoWorkEventArgs e) {
             Process v2rayProcess = new Process();
             v2rayProcess.StartInfo.FileName = Utilities.corePath;
 
             DirectoryInfo configDirectoryInfo = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory + @"config\");
             var cusConfigs = configDirectoryInfo.GetFiles("*.json", SearchOption.TopDirectoryOnly);
-            foreach (var cusConfig in cusConfigs)
-            {
+            foreach (var cusConfig in cusConfigs) {
                 Debug.WriteLine(v2rayProcess.StartInfo.FileName);
                 v2rayProcess.StartInfo.Arguments = "-test -config " + "\"" + cusConfig.FullName + "\"";
                 v2rayProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                try
-                {
+                try {
                     v2rayProcess.Start();
                     v2rayProcess.WaitForExit();
                     Debug.WriteLine("exit code is " + v2rayProcess.ExitCode.ToString());
-                    if(v2rayProcess.ExitCode == 0)
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
+                    if (v2rayProcess.ExitCode == 0) {
+                        Dispatcher.Invoke(() => {
                             cusConfigBox.Items.Add(cusConfig.Name);
                         });
                     }
@@ -128,42 +113,34 @@ namespace V2RayW
             }
         }
         #endregion
-        
-        void RefreshListBox(ListBox listBox, List<Dictionary<string, object>> dataSource, string key)
-        {
-            RefreshListBox(listBox, dataSource, (index, item) => item[key] as string );
+
+        void RefreshListBox(ListBox listBox, List<Dictionary<string, object>> dataSource, string key) {
+            RefreshListBox(listBox, dataSource, (index, item) => item[key] as string);
         }
 
-        void RefreshListBox<T>(ListBox listBox, IList<T> dataSource, Func<int, Dictionary<string, object>, string> func)
-        {
+        void RefreshListBox<T>(ListBox listBox, IList<T> dataSource, Func<int, Dictionary<string, object>, string> func) {
             int selectedIndex = listBox.SelectedIndex;
             int countDifference = dataSource.Count() - listBox.Items.Count;
-            for (int i = 0; i < countDifference; i += 1)
-            { 
+            for (int i = 0; i < countDifference; i += 1) {
                 // add enough entries
                 listBox.Items.Add(new ListBoxItem());
             }
-            for (int i = 0; i < -countDifference; i += 1)
-            {
+            for (int i = 0; i < -countDifference; i += 1) {
                 // remove unnecessary slots
                 listBox.Items.RemoveAt(dataSource.Count());
             }
-            for (int i = 0; i < dataSource.Count; i += 1)
-            {
-                (listBox.Items[i] as ListBoxItem).Content = func(i, dataSource[i] as Dictionary<string, object> );
+            for (int i = 0; i < dataSource.Count; i += 1) {
+                (listBox.Items[i] as ListBoxItem).Content = func(i, dataSource[i] as Dictionary<string, object>);
             }
             int shouldSelect = Math.Min(dataSource.Count - 1, selectedIndex);
-            if (shouldSelect == -1 && dataSource.Count > 0)
-            {
+            if (shouldSelect == -1 && dataSource.Count > 0) {
                 shouldSelect = 0;
             }
-            if(listBox.SelectedIndex == shouldSelect)
-            {
+            if (listBox.SelectedIndex == shouldSelect) {
                 var removeAdd = new List<object> { };
                 SelectionChangedEventArgs e = new SelectionChangedEventArgs(ListBox.SelectionChangedEvent, removeAdd, removeAdd);
                 listBox.RaiseEvent(e);
-            } else
-            {
+            } else {
                 listBox.SelectedIndex = shouldSelect;
             }
         }
@@ -172,39 +149,32 @@ namespace V2RayW
 
         private List<Dictionary<string, object>> outbounds;
 
-        private void AddOutboundButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void AddOutboundButton_Click(object sender, RoutedEventArgs e) {
             var newOutbound = Utilities.outboundTemplate;
             newOutbound["tag"] = $"tag{outbounds.Count}";
             outbounds.Add(Utilities.DeepClone(newOutbound));
             RefreshListBox(outboundListBox, outbounds, "tag");
         }
 
-        private void RemoveOutboundButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void RemoveOutboundButton_Click(object sender, RoutedEventArgs e) {
             if (outboundListBox.SelectedIndex < 0 || outboundListBox.SelectedIndex >= outbounds.Count) return;
             outbounds.RemoveAt(outboundListBox.SelectedIndex);
             RefreshListBox(outboundListBox, outbounds, "tag");
-            if(outbounds.Count == 0)
-            {
+            if (outbounds.Count == 0) {
                 outboundContentBox.Text = "";
             }
         }
 
-        private void SaveOutboundButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void SaveOutboundButton_Click(object sender, RoutedEventArgs e) {
             if (outboundListBox.SelectedIndex < 0 || outboundListBox.SelectedIndex >= outbounds.Count) return;
             Dictionary<string, object> outbound;
-            try
-            {
+            try {
                 outbound = Utilities.javaScriptSerializer.Deserialize<dynamic>(outboundContentBox.Text) as Dictionary<string, object>;
-            } catch
-            {
+            } catch {
                 MessageBox.Show(Strings.messagenotvalidjson);
                 return;
             }
-            if (!outbound.ContainsKey("tag") || outbound["tag"] as string == "")
-            {
+            if (!outbound.ContainsKey("tag") || outbound["tag"] as string == "") {
                 MessageBox.Show(Strings.messagetagrequired);
                 return;
             }
@@ -213,15 +183,13 @@ namespace V2RayW
             saveOutboundButton.IsEnabled = false;
         }
 
-        private void OutboundListBox_SelectionChanged(object sender, RoutedEventArgs e)
-        {
+        private void OutboundListBox_SelectionChanged(object sender, RoutedEventArgs e) {
             if (outboundListBox.SelectedIndex < 0 || outboundListBox.SelectedIndex >= outbounds.Count) return;
             outboundContentBox.Text = JsonConvert.SerializeObject(outbounds[outboundListBox.SelectedIndex], Formatting.Indented);
             saveOutboundButton.IsEnabled = false;
         }
 
-        private void OutboundContentBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
+        private void OutboundContentBox_TextChanged(object sender, TextChangedEventArgs e) {
             saveOutboundButton.IsEnabled = true;
         }
 
@@ -231,22 +199,18 @@ namespace V2RayW
 
         public List<Dictionary<string, object>> routingRuleSets;
 
-        private void RefreshRuleListBox()
-        {
+        private void RefreshRuleListBox() {
             var rules = routingRuleSets[ruleSetListBox.SelectedIndex]["rules"] as List<object>;
-            RefreshListBox(ruleListBox, rules, (i, rule) =>
-            {
+            RefreshListBox(ruleListBox, rules, (i, rule) => {
                 string routeto = (rule.ContainsKey("outboundTag") ? rule["outboundTag"] : rule["balancerTag"]) as string;
                 return (i == rules.Count() - 1 ? "final" : i.ToString()) + ":" + routeto;
             });
         }
 
 
-        private void RuleSetListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void RuleSetListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             Dictionary<string, object> selectedRuleSet;
-            try
-            {
+            try {
                 selectedRuleSet = routingRuleSets[ruleSetListBox.SelectedIndex];
             } catch { return; }
             ruleSetNameBox.Text = selectedRuleSet["name"] as string;
@@ -254,56 +218,45 @@ namespace V2RayW
             RefreshRuleListBox();
         }
 
-        private void RuleListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void RuleListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             Dictionary<string, object> rule;
-            try
-            {
+            try {
                 rule = (routingRuleSets[ruleSetListBox.SelectedIndex]["rules"] as List<object>)[ruleListBox.SelectedIndex] as Dictionary<string, object>;
-            } catch
-            {
+            } catch {
                 return;
             }
 
             bool selectedLastRule = ruleListBox.SelectedIndex == ruleListBox.Items.Count - 1;
             domainIpEnableBox.IsEnabled = !selectedLastRule;
             networkEnableBox.IsEnabled = !selectedLastRule;
-            
+
             domainIpEnableBox.IsChecked = rule.ContainsKey("domain") || rule.ContainsKey("ip");
-            if(domainIpEnableBox.IsChecked ?? false)
-            {
+            if (domainIpEnableBox.IsChecked ?? false) {
                 string r = "";
-                if(rule.ContainsKey("domain"))
-                {
+                if (rule.ContainsKey("domain")) {
                     r += String.Join("\n", rule["domain"] as object[]);
                 }
                 r += "\n---\n";
-                if (rule.ContainsKey("ip"))
-                {
+                if (rule.ContainsKey("ip")) {
                     r += String.Join("\n", rule["ip"] as object[]);
                 }
                 domainIpBox.Text = r;
-            } else
-            {
+            } else {
                 domainIpBox.Text = "";
             }
 
             portEnableBox.IsEnabled = !selectedLastRule;
             portEnableBox.IsChecked = rule.ContainsKey("port");
-            if(portEnableBox.IsChecked ?? false)
-            {
+            if (portEnableBox.IsChecked ?? false) {
                 portBox.Text = rule["port"].ToString();
-            } else
-            {
+            } else {
                 portBox.Text = "";
             }
 
             networkEnableBox.IsChecked = rule.ContainsKey("network");
-            if (rule.ContainsKey("network"))
-            {
+            if (rule.ContainsKey("network")) {
                 netWorkListBox.SelectedIndex = Utilities.routingNetwork.IndexOf(rule["network"] as string);
-            } else
-            {
+            } else {
                 netWorkListBox.SelectedIndex = 0;
             }
 
@@ -313,56 +266,42 @@ namespace V2RayW
         }
 
 
-        private void RuleSetNameBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
+        private void RuleSetNameBox_TextChanged(object sender, TextChangedEventArgs e) {
             Dictionary<string, object> ruleSet;
-            try
-            {
+            try {
                 ruleSet = routingRuleSets[ruleSetListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch
-            {
+            } catch {
                 return;
             }
             ruleSet["name"] = ruleSetNameBox.Text;
         }
 
-        private void AddRuleSetButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void AddRuleSetButton_Click(object sender, RoutedEventArgs e) {
             routingRuleSets.Add(Utilities.DeepClone(Utilities.ROUTING_DIRECT));
             RefreshListBox(ruleSetListBox, routingRuleSets, "name");
         }
 
-        private void RemoveRuleSetButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void RemoveRuleSetButton_Click(object sender, RoutedEventArgs e) {
             if (routingRuleSets.Count == 1 || ruleSetListBox.SelectedIndex < 0 || ruleSetListBox.SelectedIndex >= routingRuleSets.Count) return;
             routingRuleSets.RemoveAt(ruleSetListBox.SelectedIndex);
             RefreshListBox(ruleSetListBox, routingRuleSets, "name");
         }
 
-        private void DomainStrategyBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void DomainStrategyBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             Dictionary<string, object> ruleSet;
-            try
-            {
+            try {
                 ruleSet = routingRuleSets[ruleSetListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch
-            {
+            } catch {
                 return;
             }
             ruleSet["domainStrategy"] = domainStrategyBox.SelectedItem.ToString();
         }
 
-        private void AddRuleButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void AddRuleButton_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> ruleSet;
-            try
-            {
+            try {
                 ruleSet = routingRuleSets[ruleSetListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch
-            {
+            } catch {
                 return;
             }
             List<object> rules = ruleSet["rules"] as List<object>;
@@ -370,15 +309,11 @@ namespace V2RayW
             RefreshRuleListBox();
         }
 
-        private void RemoveRuleButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void RemoveRuleButton_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> ruleSet;
-            try
-            {
+            try {
                 ruleSet = routingRuleSets[ruleSetListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch
-            {
+            } catch {
                 return;
             }
             List<object> rules = ruleSet["rules"] as List<object>;
@@ -387,120 +322,95 @@ namespace V2RayW
             RefreshRuleListBox();
         }
 
-        Dictionary<String, object> GetSelectedRule()
-        {
+        Dictionary<String, object> GetSelectedRule() {
             Dictionary<string, object> ruleSet;
-            try
-            {
+            try {
                 ruleSet = routingRuleSets[ruleSetListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch
-            { return null; }
+            } catch { return null; }
             List<object> rules = ruleSet["rules"] as List<object>;
             Dictionary<string, object> rule;
-            try
-            {
+            try {
                 rule = rules[ruleListBox.SelectedIndex] as Dictionary<string, object>;
-            }
-            catch { return null; }
+            } catch { return null; }
             return rule;
         }
 
-        private void DomainIpEnableBox_Click(object sender, RoutedEventArgs e)
-        {
+        private void DomainIpEnableBox_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
 
-            if (!(domainIpEnableBox.IsChecked??false))
-            {
+            if (!(domainIpEnableBox.IsChecked ?? false)) {
                 rule.Remove("ip");
                 rule.Remove("domain");
-            } else
-            {
+            } else {
                 domainIpBox.Focus();
             }
         }
 
-        private void NetworkEnableBox_Click(object sender, RoutedEventArgs e)
-        {
+        private void NetworkEnableBox_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
 
-            if (!(networkEnableBox.IsChecked ?? false))
-            {
+            if (!(networkEnableBox.IsChecked ?? false)) {
                 rule.Remove("network");
-            } else
-            {
+            } else {
                 rule["network"] = netWorkListBox.SelectedItem.ToString();
             }
         }
 
-        private void PortEnableBox_Click(object sender, RoutedEventArgs e)
-        {
+        private void PortEnableBox_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
 
-            if (!portEnableBox.IsChecked ?? false)
-            {
+            if (!portEnableBox.IsChecked ?? false) {
                 rule.Remove("port");
-            } else
-            {
+            } else {
                 portBox.Focus();
             }
 
         }
 
-        private void DomainIpBox_LostFocus(object sender, RoutedEventArgs e)
-        {
+        private void DomainIpBox_LostFocus(object sender, RoutedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
             string[] parts = domainIpBox.Text.Split(new[] { "---" }, StringSplitOptions.None);
             Debug.WriteLine(parts.ToString());
-            if(parts.Count() == 0)
-            {
+            if (parts.Count() == 0) {
                 rule.Remove("ip");
                 rule.Remove("domain");
                 domainIpEnableBox.IsChecked = false;
-            } else if (parts.Count() == 1)
-            {
+            } else if (parts.Count() == 1) {
                 rule.Remove("ip");
                 rule["domain"] = parts[0].Split(new[] { '\r', '\n' }).Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
-            } else
-            {
+            } else {
                 rule["domain"] = parts[0].Split(new[] { '\r', '\n' }).Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
                 rule["ip"] = parts[1].Split(new[] { '\r', '\n' }).Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
             }
-            
+
         }
 
-        private void NetWorkListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void NetWorkListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
 
-            if (!networkEnableBox.IsChecked ?? false)
-            {
+            if (!networkEnableBox.IsChecked ?? false) {
                 return;
             }
             rule["network"] = netWorkListBox.SelectedItem.ToString();
         }
 
-        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
-        {
-            if(e.Text == "-" && !portBox.Text.Contains("-"))
-            {
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e) {
+            if (e.Text == "-" && !portBox.Text.Contains("-")) {
                 return;
             }
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
 
-        private void PortBox_LostFocus(object sender, RoutedEventArgs e)
-        {
+        private void PortBox_LostFocus(object sender, RoutedEventArgs e) {
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
-            try
-            {
+            try {
                 rule["port"] = UInt16.Parse(portBox.Text);
             } catch {
                 rule["port"] = portBox.Text.Trim();
@@ -508,17 +418,14 @@ namespace V2RayW
 
         }
 
-        private void RouteToBox_LostFocus(object sender, RoutedEventArgs e)
-        {
+        private void RouteToBox_LostFocus(object sender, RoutedEventArgs e) {
             Debug.WriteLine("lost focus");
             Dictionary<string, object> rule = GetSelectedRule();
             if (rule == null) return;
-            if (routeToBox.Text == "balance")
-            {
+            if (routeToBox.Text == "balance") {
                 rule.Remove("outboundTag");
                 rule["balancerTag"] = "balance";
-            } else
-            {
+            } else {
                 rule.Remove("balancerTag");
                 rule["outboundTag"] = routeToBox.Text.Trim();
             }
@@ -526,8 +433,7 @@ namespace V2RayW
 
         #endregion
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void SaveButton_Click(object sender, RoutedEventArgs e) {
             configWindow.outbounds = outbounds;
             configWindow.subscriptions = subscriptionBox.Text.Split(new[] { '\r', '\n' }).Select(line => line.Trim()).Where(link => link.Length > 0).ToList();
             configWindow.routingRuleSets = routingRuleSets;
@@ -535,15 +441,12 @@ namespace V2RayW
             this.Close();
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void CancelButton_Click(object sender, RoutedEventArgs e) {
             this.Close();
         }
 
-        private void HelpButton_Click(object sender, RoutedEventArgs e)
-        {
-            switch(mainTabControl.SelectedIndex)
-            {
+        private void HelpButton_Click(object sender, RoutedEventArgs e) {
+            switch (mainTabControl.SelectedIndex) {
                 case 0: Process.Start(Strings.outboundHelppage); break;
                 case 2: Process.Start(Strings.ruleHelppage); break;
                 case 3: Process.Start(Strings.configHelppage); break;

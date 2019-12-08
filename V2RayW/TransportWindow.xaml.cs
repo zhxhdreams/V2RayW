@@ -16,37 +16,31 @@ using System.Windows.Shapes;
 using Newtonsoft.Json;
 using V2RayW.Resources;
 
-namespace V2RayW
-{
+namespace V2RayW {
     /// <summary>
     /// Interaction logic for TransportWindow.xaml
     /// </summary>
     /// 
 
-    public partial class TransportWindow : Window
-    {
+    public partial class TransportWindow : Window {
         private ConfigWindow configWindow;
-        public TransportWindow()
-        {
+        public TransportWindow() {
             InitializeComponent();
             kcpCongestionBox.Items.Add("false");
             kcpCongestionBox.Items.Add("true");
-            foreach (string obfu in Utilities.OBFU_LIST)
-            {
+            foreach (string obfu in Utilities.OBFU_LIST) {
                 kcpHeaderBox.Items.Add(obfu);
             }
         }
 
-        public void InitializeData()
-        {
+        public void InitializeData() {
             configWindow = this.Owner as ConfigWindow;
             Dictionary<string, object> muxSettings = configWindow.profiles[configWindow.vmessListBox.SelectedIndex]["mux"] as Dictionary<string, object>;
             Dictionary<string, object> streamSettings = configWindow.profiles[configWindow.vmessListBox.SelectedIndex]["streamSettings"] as Dictionary<string, object>;
             FillinData(streamSettings, muxSettings);
         }
 
-        private void FillinData(Dictionary<string, object> streamSettings, Dictionary<string, object> muxSettings)
-        {
+        private void FillinData(Dictionary<string, object> streamSettings, Dictionary<string, object> muxSettings) {
             muxEnableBox.IsChecked = (bool)muxSettings["enabled"];
             muxConcurrencyBox.Text = muxSettings["concurrency"].ToString();
 
@@ -66,12 +60,9 @@ namespace V2RayW
             Dictionary<string, object> tcpSettings = streamSettings["tcpSettings"] as Dictionary<string, object>;
             tcpHeaderCheckBox.IsChecked = (tcpSettings[@"header"] as Dictionary<string, object>)["type"].ToString() != "none";
             tcpHeaderContentBox.Text = JsonConvert.SerializeObject(tcpSettings, Formatting.Indented);
-            if (Utilities.IsWindows10())
-            {
+            if (Utilities.IsWindows10()) {
                 tcpForceBox.IsChecked = (streamSettings["sockopt"] as Dictionary<string, object>).ContainsKey("tcpFastOpen");
-            }
-            else
-            {
+            } else {
                 tcpForceBox.IsChecked = false;
                 tcpForceBox.Visibility = Visibility.Hidden;
             }
@@ -92,15 +83,13 @@ namespace V2RayW
             #region quick
             Dictionary<string, object> quicSettings = streamSettings["quicSettings"] as Dictionary<string, object>;
             quicSecurityBox.Items.Clear();
-            foreach (string security in Utilities.QUIC_SECURITY_LIST)
-            {
+            foreach (string security in Utilities.QUIC_SECURITY_LIST) {
                 quicSecurityBox.Items.Add(security);
             }
             quicSecurityBox.SelectedIndex = Utilities.QUIC_SECURITY_LIST.FindIndex(x => x == quicSettings["security"] as string);
             quicKeyBox.Text = quicSettings["key"].ToString();
             quicHeaderBox.Items.Clear();
-            foreach (string obfu in Utilities.OBFU_LIST)
-            {
+            foreach (string obfu in Utilities.OBFU_LIST) {
                 quicHeaderBox.Items.Add(obfu);
             }
             quicHeaderBox.SelectedIndex = Utilities.OBFU_LIST.FindIndex(x => x == (quicSettings["header"] as Dictionary<string, object>)["type"] as string);
@@ -117,58 +106,46 @@ namespace V2RayW
             #endregion
         }
 
-        private void TcpExampleButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void TcpExampleButton_Click(object sender, RoutedEventArgs e) {
             Process.Start(Strings.tcpHelpPage);
         }
 
-        private int ParseNumberFromBox(TextBox box, int defaultValue, int? min, int? max)
-        {
+        private int ParseNumberFromBox(TextBox box, int defaultValue, int? min, int? max) {
             int result;
-            try
-            {
+            try {
                 result = Int32.Parse(box.Text);
-            } catch
-            {
+            } catch {
                 result = defaultValue;
             }
             result = Math.Min(Math.Max(result, min ?? int.MinValue), max ?? int.MaxValue);
             return result;
         }
 
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void SaveButton_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> tcpSettings = new Dictionary<string, object>
             {
                 {"header", new Dictionary<string, object>{ {"type", "none"} } }
             };
-            if(tcpHeaderCheckBox.IsChecked ?? false)
-            {
-                try
-                {
+            if (tcpHeaderCheckBox.IsChecked ?? false) {
+                try {
                     tcpSettings = Utilities.javaScriptSerializer.Deserialize<dynamic>(tcpHeaderContentBox.Text);
-                    if(tcpSettings==null)
-                    {
+                    if (tcpSettings == null) {
                         throw new NullReferenceException();
                     }
-                } catch
-                {
+                } catch {
                     MessageBox.Show(this, "TCP " + Strings.header + "\n" + tcpHeaderContentBox.Text, Strings.messagenotvalidjson);
                     return;
                 }
             }
 
             Dictionary<string, object> wsHeaders;
-            try
-            {
+            try {
                 wsHeaders = Utilities.javaScriptSerializer.Deserialize<dynamic>(wsHeaderBox.Text);
-            } catch
-            {
+            } catch {
                 MessageBox.Show("WebSocket " + Strings.header + "\n" + wsHeaderBox.Text, Strings.messagenotvalidjson);
                 return;
             }
-            if (wsHeaders == null)
-            {
+            if (wsHeaders == null) {
                 wsHeaders = new Dictionary<string, object>();
             }
 
@@ -193,11 +170,9 @@ namespace V2RayW
             };
 
             streamSettings["tcpSettings"] = tcpSettings;
-            if(tcpForceBox.IsChecked??false && Utilities.IsWindows10())
-            {
+            if (tcpForceBox.IsChecked ?? false && Utilities.IsWindows10()) {
                 streamSettings["sockopt"] = new Dictionary<string, object> { { "tcpFastOpen", true } };
-            } else
-            {
+            } else {
                 streamSettings["sockopt"] = new Dictionary<string, object>();
             }
             streamSettings["wsSettings"] = new Dictionary<string, object>
@@ -220,7 +195,7 @@ namespace V2RayW
                 {"security", quicSecurityBox.SelectedItem.ToString() },
                 {"header", new Dictionary<string, object>{ { "type", quicHeaderBox.SelectedItem.ToString() } } }
             };
-            streamSettings["security"] = tlsEnableBox.IsChecked??false ? "tls" : "none";
+            streamSettings["security"] = tlsEnableBox.IsChecked ?? false ? "tls" : "none";
             streamSettings["tlsSettings"] = new Dictionary<string, object> {
                 { "allowInsecure", tlsInsecureBox.IsChecked ?? false },
                 { "alpn", tlsAlpnBox.Text.Split(',') },
@@ -230,30 +205,24 @@ namespace V2RayW
             this.Close();
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void CancelButton_Click(object sender, RoutedEventArgs e) {
             this.Close();
         }
 
-        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
-        {
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e) {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
 
-        private void HelpButton_Click(object sender, RoutedEventArgs e)
-        {
-            if(mainTabControl.SelectedIndex == mainTabControl.Items.Count - 1)
-            {
+        private void HelpButton_Click(object sender, RoutedEventArgs e) {
+            if (mainTabControl.SelectedIndex == mainTabControl.Items.Count - 1) {
                 Process.Start(Strings.muxHelpPage);
-            } else
-            {
+            } else {
                 Process.Start(Strings.transportHelpPage);
             }
         }
 
-        private void ResetButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void ResetButton_Click(object sender, RoutedEventArgs e) {
             Dictionary<string, object> vmessTemplate = Utilities.VmessOutboundTemplate();
             FillinData(vmessTemplate["streamSettings"] as Dictionary<string, object>, vmessTemplate["mux"] as Dictionary<string, object>);
         }

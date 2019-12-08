@@ -120,6 +120,7 @@ namespace V2RayW {
 
         BackgroundWorker coreDownloader;
 
+        //下载v2ray core文件
         private void CoreDownloader_DoWork(object sender, DoWorkEventArgs e) {
             try {
                 DownloadCore();
@@ -150,6 +151,7 @@ namespace V2RayW {
             Debug.WriteLine("core is extraced");
         }
 
+        //检测各个必要文件及文件夹
         private bool CheckFiles() {
             #region pac, config, log dir 
             string currentDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -170,15 +172,15 @@ namespace V2RayW {
 
             #region check core
 
-            bool findMissingFile = false;
+            bool isMissingFile = false;
             string coreDirectory = AppDomain.CurrentDomain.BaseDirectory + @"v2ray-core\";
             foreach (string file in Utilities.necessaryFiles) {
                 if (!File.Exists(coreDirectory + file)) {
-                    findMissingFile = true;
+                    isMissingFile = true;
                     break;
                 }
             }
-            if (findMissingFile) {
+            if (isMissingFile) {
                 var result = MessageBox.Show(Strings.messagenocore, Strings.messagenocoretitle, MessageBoxButton.YesNoCancel);
                 switch (result) {
                     case MessageBoxResult.Yes: {
